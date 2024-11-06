@@ -13,13 +13,13 @@ service_account_key_path = "service_acc.json"
 # Initialize Firebase
 cred = credentials.Certificate(service_account_key_path)
 firebase_admin.initialize_app(cred, {
-    'storageBucket': "facedetection-92a73.appspot.com",
-    'databaseURL': 'https://facedetection-92a73-default-rtdb.firebaseio.com'
+    'storageBucket': "********************",
+    'databaseURL': '*********************'
 })
 
 # Get a reference to the storage bucket and database
 bucket = storage.bucket()
-db_ref = db.reference('1RV22CS211/entry')
+db_ref = db.reference('*****/entry')
 logs_ref = db.reference('/logs')
 
 def list_images(folder):
