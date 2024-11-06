@@ -1,0 +1,11 @@
+Flask
+PyMuPDF
+pytesseract
+opencv-python
+pdf2image
+numpy
+Pillow
+firebase-admin
+firebase-functions
+requests
+fpdf

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Access Control</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4a90e2, #50e3c2);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            /* Prevent horizontal overflow */
+        }
+
+        h1 {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            /* Include padding and border in element’s total width and height */
+        }
+
+        .date-picker-container {
+            display: flex;
+            align-items: center;
+            margin: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        #datePicker {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            flex: 1;
+        }
+
+        .calendar-icon {
+            margin-left: 10px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            fill: #333;
+        }
+
+        button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #555;
+            transform: scale(1.05);
+        }
+
+        table {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            /* Initially hide the table */
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #0056b3;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        tr:hover {
+            background-color: #d9eaff;
+        }
+
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+        }
+
+        .date-time {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>View Logs</h1>
+
+    <!-- Date Picker and Buttons -->
+    <div class="date-picker-container">
+        <input type="text" id="datePicker" placeholder="Select a date to filter">
+        <svg id="calendarIcon" class="calendar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M19 3h-1V1h-2v2H8V1H6v2H5C3.897 3 3 3.897 3 5v15c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2zM5 20V9h14l.002 11H5zM19 7H5V5h14v2z">
+            </path>
+        </svg>
+    </div>
+
+    <button id="filterLogsBtn">Filter Logs</button>
+    <button id="showLogsBtn">Show All Logs</button>
+
+    <!-- Log table -->
+    <table id="log-table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Event Type</th>
+            </tr>
+        </thead>
+        <tbody id="log-body"></tbody>
+    </table>
+
+    <!-- Firebase JS SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Your Firebase config -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7oFE-if_vx3D4nQ4e7KKcwZo-Dej9qhQ",
+            authDomain: "facedetection-92a73.firebaseapp.com",
+            projectId: "facedetection-92a73",
+            storageBucket: "facedetection-92a73.appspot.com",
+            messagingSenderId: "398813687167",
+            appId: "1:398813687167:web:238e9aa74608f3ba353e4a"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <script>
+        // Initialize Firebase services
+        const db = firebase.database();
+        const storage = firebase.storage();
+
+        // Get DOM elements
+        const showLogsBtn = document.getElementById('showLogsBtn');
+        const filterLogsBtn = document.getElementById('filterLogsBtn');
+        const logTable = document.getElementById('log-table');
+        const logBody = document.getElementById('log-body');
+        const datePicker = document.getElementById('datePicker');
+        const calendarIcon = document.getElementById('calendarIcon');
+
+        // Initialize Flatpickr
+        const fp = flatpickr("#datePicker", {
+            dateFormat: "Y-m-d",
+        });
+
+        // Open the date picker when the calendar icon is clicked
+        calendarIcon.addEventListener('click', () => {
+            fp.open();
+        });
+
+        // Helper function to format the timestamp in IST
+        function formatTimestamp(isoString) {
+            const date = new Date(isoString);
+
+            // Convert to IST (Indian Standard Time)
+            const optionsDate = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+
+            const formattedDate = date.toLocaleDateString('en-IN', optionsDate);
+            const formattedTime = date.toLocaleTimeString('en-IN', optionsTime);
+
+            return { date: formattedDate, time: formattedTime };
+        }
+
+        // Display logs based on selected date
+        filterLogsBtn.addEventListener('click', () => {
+            const selectedDate = datePicker.value;
+            if (selectedDate) {
+                fetchLogsByDate(selectedDate);
+            } else {
+                alert('Please select a date.');
+            }
+        });
+
+        // Function to fetch and display logs by date
+        function fetchLogsByDate(date) {
+            const logRef = db.ref('logs/');
+            logRef.on('value', (snapshot) => {
+                logBody.innerHTML = ''; // Clear previous logs
+                logTable.style.display = 'table'; // Show the table
+                let logsFound = false; // Flag to track if any logs are found
+
+                snapshot.forEach((childSnapshot) => {
+                    const logData = childSnapshot.val();
+                    const logDate = logData.timestamp.split('T')[0]; // Extract the date part
+
+                    if (!date || logDate === date) {
+                        logsFound = true; // Set to true if a matching log is found
+
+                        const { date, time } = formatTimestamp(logData.timestamp);
+
+                        const row = document.createElement('tr');
+
+                        const imgCell = document.createElement('td');
+                        const img = document.createElement('img');
+                        img.src = logData.url;
+                        img.alt = 'User Image';
+                        imgCell.appendChild(img);
+
+                        const dateCell = document.createElement('td');
+                        dateCell.className = 'date-time';
+                        dateCell.textContent = date;
+
+                        const timeCell = document.createElement('td');
+                        timeCell.className = 'date-time';
+                        timeCell.textContent = time;
+
+                        const eventTypeCell = document.createElement('td');
+                        eventTypeCell.className = 'date-time';
+                        eventTypeCell.textContent = logData.eventType;
+
+                        row.appendChild(imgCell);
+                        row.appendChild(dateCell);
+                        row.appendChild(timeCell);
+                        row.appendChild(eventTypeCell);
+
+                        logBody.appendChild(row);
+                    }
+                });
+
+                if (!logsFound) {
+                    const noLogsRow = document.createElement('tr');
+                    const noLogsCell = document.createElement('td');
+                    noLogsCell.setAttribute('colspan', '4');
+                    noLogsCell.textContent = 'No logs found for the selected date.';
+                    noLogsCell.style.textAlign = 'center';
+
+                    noLogsRow.appendChild(noLogsCell);
+                    logBody.appendChild(noLogsRow);
+                }
+            });
+        }
+
+        // Show all logs when "Show Logs" button is clicked
+        showLogsBtn.addEventListener('click', () => {
+            fetchLogsByDate(''); // Pass an empty string to show all logs
+        });
+    </script>
+</body>
+
+</html>
