@@ -3,13 +3,13 @@
 #include <WiFi.h>
 #include <esp32cam.h>
 
-#define WIFI_SSID "vivo 1983"
-#define WIFI_PASSWORD "12345678"
+#define WIFI_SSID ""
+#define WIFI_PASSWORD ""
 
-#define FIREBASE_HOST "facedetection-92a73-default-rtdb.firebaseio.com"
-#define FIREBASE_AUTH "AIzaSyA7oFE-if_vx3D4nQ4e7KKcwZo-Dej9qhQ"
+#define FIREBASE_HOST ""
+#define FIREBASE_AUTH ""
 
-String FIREBASE_BUCKET = "1RV22CS211";  // Replace with your USN
+String FIREBASE_BUCKET = "";  // Replace with your USN
 
 FirebaseData firebaseData;
 
